@@ -13,6 +13,8 @@ Mac 上面嘅本機 AI 配方部署器（Tauri 2：Rust 後端 + 原生 JS 介�
 | 用 HyperFlow H3 本機生成影片 | 本版教學引擎要求 macOS 26.2 或更新。由零安裝需完整版 Xcode、Metal 工具鏈及 FFmpeg。模型同引擎預留約 40 GB，另計 Xcode、暫存及影片空間。 |
 | 原生 1080p 生成 | 已喺上述 Mac Studio 生成 1920 × 1080 角色特寫。記憶體需要隨解像度、格數同其他正在執行嘅程式而變；最低統一記憶體仍未實測確定。 |
 
+**Mac mini 64 GB 同 MacBook Pro Max**：先睇「關於此 Mac」嘅晶片。M 系列 Mac mini（例如 M4 Pro 64 GB）同配備 Max 晶片嘅 MacBook Pro 都符合 App 架構要求；Mac mini 64 GB 嘅 H3 效能仍未實機驗證。GitHub v0.6.1 安裝包內置六鏡固定用 1024 × 576。`main` 原始碼版可喺「HyperFlow H3 → 鏡頭 → 輸出解像度」揀 512 × 288、1024 × 576、1280 × 720 或 1920 × 1080。建議先用細尺寸試構圖，再按可用記憶體提高解像度。
+
 第一次用新版，可以一邊睇 [v0.6.1 項目圖解](docs/Project-Walkthrough.md)，一邊跟 [廣東話教學片（約 59 秒）](docs/tutorial/OctoRole-0.6.1-projects-yue.mp4) 操作。
 
 1. 用 Apple Silicon Mac [下載 OctoRole v0.6.1（Mac ZIP）](https://github.com/Octopus-InfoTech-Limited/OctoRole/releases/download/v0.6.1/OctoRole-0.6.1-Mac.zip)，解壓後將 **OctoRole.app** 拖入「應用程式」。

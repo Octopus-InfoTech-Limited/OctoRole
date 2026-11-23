@@ -35,9 +35,12 @@ export async function showH3(view, {esc, toast, loadWorks}) {
     if (!panel.isConnected) return;
     const pick = (key, label, value) => `<div class="row"><button class="btn" data-pick="${key}">${label}</button><small>${esc(value)}</small>${value ? `<button class="btn link" data-clear="${key}">×</button>` : ''}</div>`;
     panel.innerHTML = `<h2>${title} · 16:9</h2>
-    <p>${tr('1024 × 576 · six 3-second shots · one shared character reference.', '1024 × 576 · 六個約三秒鏡頭 · 全片共用角色參考相。')}</p>
+    <p>${tr('Six 3-second shots · one shared character reference.', '六個約三秒鏡頭 · 全片共用角色參考相。')}</p>
     <button class="btn" data-setup>${tr('Set up engine','安裝引擎')}</button> <button class="btn" data-start>${tr('Start local engine','啟動本機引擎')}</button>
     <fieldset ${busy ? 'disabled' : ''}>
+    <label>${tr('Output resolution','輸出解像度')}<select data-resolution>
+      ${[['288p','512 × 288'],['576p','1024 × 576'],['720p','1280 × 720'],['1080p','1920 × 1080']].map(([id,label])=>`<option value="${id}" ${(project.resolution || '576p')===id?'selected':''}>${label}</option>`).join('')}
+    </select></label>
     ${pick('character', tr('Choose character (default: Kai)', '揀角色相（預設：阿啟）'),project.character)}
     ${pick('scene', tr('Choose optional location image','揀場景相（可選）'),project.scene)}
     <label>${tr('Character and continuity','角色同連戲設定')}<textarea data-identity>${esc(project.identity)}</textarea></label>
@@ -46,6 +49,7 @@ export async function showH3(view, {esc, toast, loadWorks}) {
     <p role="status" id="h3-status"></p>${result ? `<button class="btn" data-reveal>${tr('Show finished MP4','顯示成片')}</button>` : ''}`;
     progress();
     panel.oninput = ({target:t}) => {
+      if (t.hasAttribute('data-resolution')) project.resolution = t.value;
       if (t.hasAttribute('data-identity')) project.identity = t.value;
       if (t.dataset.shot !== undefined) project.shots[Number(t.dataset.shot)] = t.value;
       if (t.dataset.caption !== undefined) (project.captions ??= Array(6).fill(''))[Number(t.dataset.caption)] = t.value;

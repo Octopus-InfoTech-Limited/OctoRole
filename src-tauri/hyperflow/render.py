@@ -39,10 +39,10 @@ def streams(path):
         "ffprobe", "-v", "error", "-show_streams", "-of", "json", path]))["streams"]
 
 
-def validate(path, frames):
+def validate(path, frames, output_height=None):
     tracks = streams(path)
     video = next(s for s in tracks if s["codec_type"] == "video")
-    if (video["width"], video["height"], int(video["nb_frames"])) != (WIDTH, HEIGHT, frames):
+    if (video["width"], video["height"], int(video["nb_frames"])) != (WIDTH, output_height or HEIGHT, frames):
         raise ValueError(f"Unexpected geometry or frame count in {path}")
     if not any(s["codec_type"] == "audio" for s in tracks):
         raise ValueError(f"Missing audio track in {path}")
@@ -103,6 +103,13 @@ def render_shot(port, spec, character, scene, blocking, dest, temp):
 
 
 def run(root, project, port):
+    global WIDTH, HEIGHT
+    sizes = {"288p": (512, 288), "576p": (1024, 576), "720p": (1280, 720), "1080p": (1920, 1080)}
+    resolution = project.get("resolution", "576p")
+    if resolution not in sizes:
+        raise ValueError("Unknown resolution")
+    WIDTH, output_height = sizes[resolution]
+    HEIGHT = ((output_height + 31) // 32) * 32
     character = Path(project.get("character") or HERE / "driver.png")
     scene = Path(project["scene"]) if project.get("scene") else None
     shots = project["shots"]
@@ -159,6 +166,10 @@ def run(root, project, port):
             args += ["-i", clip]
             parts.append(f"[{i}:a]atrim=end_sample={FRAMES * 48000 // FPS},asetpts=PTS-STARTPTS[a{i}]")
         parts.append("".join(f"[{i}:v][a{i}]" for i in range(6))+"concat=n=6:v=1:a=1[v][a]")
+        picture = "[v]"
+        if HEIGHT != output_height:
+            parts.append(f"[v]crop={WIDTH}:{output_height}:0:{(HEIGHT-output_height)//2}[cropped]")
+            picture = "[cropped]"
         out = temp / "film.mp4"
         subs = []
         captions = project.get("captions")
@@ -173,10 +184,10 @@ def run(root, project, port):
             args += ["-i", subtitles]
             subs = ["-map", "6:s:0", "-c:s", "mov_text", "-metadata:s:s:0", "language=yue",
                     "-disposition:s:0", "default"]
-        ffmpeg(*args, "-filter_complex", ";".join(parts), "-map", "[v]", "-map", "[a]", *subs,
+        ffmpeg(*args, "-filter_complex", ";".join(parts), "-map", picture, "-map", "[a]", *subs,
                "-c:v", "libx264", "-crf", "17", "-pix_fmt", "yuv420p", "-c:a", "aac",
                "-movflags", "+faststart", out)
-        validate(out, FRAMES * 6)
+        validate(out, FRAMES * 6, output_height)
         side = temp / "meta.json"
         side.write_text(json.dumps(dict(created=int(time.time()), recipe="HyperFlow H3",
                                          values={"character": str(character), "shots": shots},
