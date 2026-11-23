@@ -1,5 +1,7 @@
 # OctoRole
 
+[Mac App Store 版操作教學（附實機截圖）](store/README.md) · [私隱政策](docs/App-Store-Privacy.md)
+
 Mac 上面嘅本機 AI 配方部署器（Tauri 2：Rust 後端 + 原生 JS 介面）。
 揀一個配方，OctoRole 就會下載模型、逐個檔案核對 SHA-256、裝好本機引擎，然後用配方自動生成嘅表單去創作。全部喺你部 Mac 上面行。
 
