@@ -151,3 +151,9 @@ textarea { min-height: 96px; resize: vertical; }
 .active-project { margin: 2px 14px 12px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
 #new-project { margin-top: 14px; }
 #project-progress { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.project-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .75fr); gap: 16px; align-items: start; }
+#project-monitor progress { display: block; width: 100%; height: 10px; margin: 10px 0 18px; accent-color: var(--accent); }
+#project-episodes > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+#project-episodes > div > :last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 830px) { .project-layout { grid-template-columns: 1fr; } }

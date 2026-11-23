@@ -116,13 +116,25 @@ def run(root, project, port):
     cache.mkdir(parents=True, exist_ok=True)
     character_hash, scene_hash = digest(character), digest(scene) if scene else None
     files = []
-    server_checked = False
+    requests = []
     for index, (shot, path) in enumerate(zip(shots, motion), 1):
         spec = dict(model=MODEL, renderer=1, identity=identity, shot=shot, seed=4200+index,
                     character=character_hash, scene=scene_hash, blocking=digest(Path(path)) if path else None,
                     width=WIDTH, height=HEIGHT, frames=FRAMES, steps=6)
         dest = cache / (signature(spec) + ".mp4")
         files.append(dest)
+        requests.append((spec, path, dest))
+    works = root / "works"
+    works.mkdir(exist_ok=True)
+    film = works / ("HyperFlow-six-shots-" + signature([[p.stem for p in files], project.get("captions")]) + ".mp4")
+    # Publish the plan before GPU work starts. Only finalized clips exist at these paths.
+    plan = [{"label": "HyperFlow H3", "steps": [[str(p.relative_to(root))] for p in files],
+             "outputs": [str(film.relative_to(root))]}]
+    pending = cache.parent / "production-plan.tmp"
+    pending.write_text(json.dumps(plan))
+    pending.replace(cache.parent / "production-plan.json")
+    server_checked = False
+    for index, (spec, path, dest) in enumerate(requests, 1):
         if dest.exists():
             validate(dest, FRAMES)
             print(f"Shot {index}/6 • using saved clip", flush=True)
@@ -139,9 +151,6 @@ def run(root, project, port):
         print(f"Shot {index}/6 • rendering", flush=True)
         with tempfile.TemporaryDirectory(dir=cache) as tmp:
             render_shot(port, spec, character, scene, path, dest, Path(tmp))
-    works = root / "works"
-    works.mkdir(exist_ok=True)
-    film = works / ("HyperFlow-six-shots-" + signature([[p.stem for p in files], project.get("captions")]) + ".mp4")
     with tempfile.TemporaryDirectory(dir=works) as tmp:
         temp = Path(tmp)
         # Reassemble decoded audio on an exact timeline (each AAC file has encoder priming).
