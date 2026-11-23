@@ -5,6 +5,14 @@ Mac 上面嘅本機 AI 配方部署器（Tauri 2：Rust 後端 + 原生 JS 介�
 
 ## 下載及安裝 v0.6.1
 
+**邊部 Mac 用到？** v0.6.1 安裝包適用於 Apple Silicon（M 系列）Mac，例如配備 M 系列晶片嘅 MacBook Air、MacBook Pro、iMac、Mac mini、Mac Studio 或 Mac Pro。Intel Mac 無法運行呢個 arm64 安裝包。撳  →「關於此 Mac」可以睇晶片、記憶體同 macOS 版本。
+
+| 用途 | 系統及硬件 |
+|---|---|
+| 安裝 OctoRole | 安裝包標示最低 macOS 13.0。實測配置包括 MacBook Pro（M5 Max、128 GB、macOS 26.6.2）及 Mac Studio（M5 Ultra、256 GB、macOS 27.2）。 |
+| 用 HyperFlow H3 本機生成影片 | 本版教學引擎要求 macOS 26.2 或更新。由零安裝需完整版 Xcode、Metal 工具鏈及 FFmpeg。模型同引擎預留約 40 GB，另計 Xcode、暫存及影片空間。 |
+| 原生 1080p 生成 | 已喺上述 Mac Studio 生成 1920 × 1080 角色特寫。記憶體需要隨解像度、格數同其他正在執行嘅程式而變；最低統一記憶體仍未實測確定。 |
+
 第一次用新版，可以一邊睇 [v0.6.1 項目圖解](docs/Project-Walkthrough.md)，一邊跟 [廣東話教學片（約 59 秒）](docs/tutorial/OctoRole-0.6.1-projects-yue.mp4) 操作。
 
 1. 用 Apple Silicon Mac [下載 OctoRole v0.6.1（Mac ZIP）](https://github.com/Octopus-InfoTech-Limited/OctoRole/releases/download/v0.6.1/OctoRole-0.6.1-Mac.zip)，解壓後將 **OctoRole.app** 拖入「應用程式」。
