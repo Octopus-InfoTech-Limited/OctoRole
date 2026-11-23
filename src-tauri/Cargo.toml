@@ -1,0 +1,40 @@
+[package]
+name = "octorole"
+version = "0.6.0"
+description = "OctoRole - local AI recipe deployer for Apple Silicon"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "octorole_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["fs", "io-util", "process", "sync", "time", "macros", "rt-multi-thread"] }
+tokio-util = "0.7"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json", "multipart"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+anyhow = "1"
+dirs = "5"
+rand = "0.8"
+url = "2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true

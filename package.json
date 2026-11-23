@@ -1,0 +1,14 @@
+{
+  "name": "octorole",
+  "version": "0.6.0",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "preview": "python3 -m http.server 4173"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

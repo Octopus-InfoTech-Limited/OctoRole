@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "id": "comfyui-sd15",
+  "version": "1",
+  "name": { "en": "Stable Diffusion 1.5 (ComfyUI)", "zh-Hant": "Stable Diffusion 1.5（ComfyUI）" },
+  "summary": {
+    "en": "Small text-to-image starter. Sets up ComfyUI on Apple Silicon and one 2 GB checkpoint, so you can confirm the whole pipeline works before trying bigger recipes.",
+    "zh-Hant": "入門級文字生成圖片。喺 Apple Silicon 上裝好 ComfyUI 同一個 2 GB 模型，用嚟確認成條流程行得通，再試更大嘅配方。"
+  },
+  "kind": "image",
+  "license_note": {
+    "en": "ComfyUI is GPL-3.0 and runs as a separate program. The checkpoint is under CreativeML OpenRAIL-M.",
+    "zh-Hant": "ComfyUI 係 GPL-3.0，以獨立程式方式執行。模型採用 CreativeML OpenRAIL-M 授權。"
+  },
+  "homepage": "https://github.com/comfyanonymous/ComfyUI",
+  "requires": {
+    "arch": ["aarch64"],
+    "min_memory_gb": 8,
+    "recommended_memory_gb": 16,
+    "disk_gb": 10
+  },
+  "tools": ["git", "curl"],
+  "downloads": [
+    {
+      "url": "https://huggingface.co/Comfy-Org/stable-diffusion-1.5/resolve/9cfd069101959ca3828bf9c04a4419870832b74f/v1-5-pruned-emaonly-fp16.safetensors",
+      "sha256": "e9476a13728cd75d8279f6ec8bad753a66a1957ca375a1464dc63b37db6e3916",
+      "bytes": 2132696762,
+      "to": "checkpoints/v1-5-pruned-emaonly-fp16.safetensors",
+      "license": "CreativeML OpenRAIL-M"
+    }
+  ],
+  "setup": {
+    "script": "install.sh",
+    "args": [
+      "--app-dir", "{app_dir}",
+      "--models-dir", "{models_dir}",
+      "--tools-dir", "{tools_dir}",
+      "--comfy-commit", "10cdd12609eb17e8a90f2a2dd811b1c82f6107e7",
+      "--uv-version", "0.13.9",
+      "--python", "3.12"
+    ]
+  },
+  "run": {
+    "script": "{app_dir}/start.sh",
+    "port": 8188,
+    "health": "/system_stats"
+  },
+  "studio": {
+    "workflow": "workflow.json",
+    "controls": [
+      {
+        "key": "prompt",
+        "label": { "en": "Prompt", "zh-Hant": "提示詞" },
+        "type": "textarea",
+        "default": "a small octopus wearing a director's beret, studio lighting, detailed illustration",
+        "targets": [{ "node": "6", "input": "text" }]
+      },
+      {
+        "key": "negative",
+        "label": { "en": "Avoid", "zh-Hant": "唔想要" },
+        "type": "text",
+        "default": "blurry, low quality, watermark, text",
+        "targets": [{ "node": "7", "input": "text" }]
+      },
+      {
+        "key": "width",
+        "label": { "en": "Width", "zh-Hant": "闊度" },
+        "type": "select",
+        "default": 512,
+        "choices": [384, 512, 640, 768],
+        "targets": [{ "node": "5", "input": "width" }]
+      },
+      {
+        "key": "height",
+        "label": { "en": "Height", "zh-Hant": "高度" },
+        "type": "select",
+        "default": 512,
+        "choices": [384, 512, 640, 768],
+        "targets": [{ "node": "5", "input": "height" }]
+      },
+      {
+        "key": "steps",
+        "label": { "en": "Steps", "zh-Hant": "步數" },
+        "type": "int",
+        "default": 20,
+        "min": 4,
+        "max": 50,
+        "step": 1,
+        "targets": [{ "node": "3", "input": "steps" }]
+      },
+      {
+        "key": "cfg",
+        "label": { "en": "Prompt strength", "zh-Hant": "提示詞強度" },
+        "type": "float",
+        "default": 7,
+        "min": 1,
+        "max": 15,
+        "step": 0.5,
+        "targets": [{ "node": "3", "input": "cfg" }]
+      },
+      {
+        "key": "seed",
+        "label": { "en": "Seed (-1 = random)", "zh-Hant": "種子（-1 = 隨機）" },
+        "type": "seed",
+        "default": -1,
+        "targets": [{ "node": "3", "input": "seed" }]
+      }
+    ]
+  }
+}
