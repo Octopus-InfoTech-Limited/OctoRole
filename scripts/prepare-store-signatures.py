@@ -12,6 +12,16 @@ MACHO_HEADERS = {
 }
 
 
+def signing_identifier(path):
+    # Some command-line tools and libraries embed their own bundle Info.plist.
+    dump = subprocess.check_output(["otool", "-arch", "arm64", "-P", str(path)])
+    marker = b"(__TEXT,__info_plist) section\n"
+    if marker not in dump:
+        return path.name
+    data = dump.split(marker, 1)[1].strip(b"\x00\r\n ")
+    return plistlib.loads(data).get("CFBundleIdentifier", path.name)
+
+
 def prepare(app, identity):
     contents = app / "Contents"
     info = plistlib.loads((contents / "Info.plist").read_bytes())
@@ -23,7 +33,7 @@ def prepare(app, identity):
             if binary.read(4) not in MACHO_HEADERS:
                 continue
         subprocess.run(["codesign", "--force", "--sign", identity,
-                        "--identifier", path.name,
+                        "--identifier", signing_identifier(path),
                         "--preserve-metadata=entitlements,flags,runtime",
                         str(path)], check=True)
     subprocess.run(["codesign", "--force", "--sign", identity,
