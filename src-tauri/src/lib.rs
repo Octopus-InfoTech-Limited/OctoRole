@@ -1,18 +1,14 @@
 mod dialogue;
-mod comfy;
 mod download;
 mod hardware;
 mod hyperflow;
-mod jobs;
 mod previs;
 mod qwen;
 mod projects;
 mod recipe;
 mod settings;
 
-use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
 use std::sync::Mutex;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -21,21 +17,14 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
-use tokio_util::sync::CancellationToken;
 
-use recipe::Recipe;
 use settings::{Layout, Settings};
 
 struct AppState {
     http: reqwest::Client,
     settings_file: PathBuf,
-    bundled_recipes: PathBuf,
     settings: Mutex<Settings>,
-    installs: Mutex<HashMap<String, CancellationToken>>,
-    /// Engines we started: recipe id -> process group id.
-    engines: Mutex<HashMap<String, u32>>,
     h3_engine: tokio::sync::Mutex<Option<(tokio::process::Child, u16)>>,
-    generating: Mutex<HashSet<String>>,
 }
 
 impl AppState {
@@ -45,12 +34,7 @@ impl AppState {
     fn layout(&self) -> Layout {
         self.settings().layout()
     }
-    fn recipes(&self) -> (Vec<Recipe>, Vec<String>) {
-        recipe::load_all(&self.bundled_recipes, &self.layout())
-    }
-    fn recipe(&self, id: &str) -> Result<Recipe> {
-        self.recipes().0.into_iter().find(|r| r.id == id).ok_or_else(|| anyhow!("unknown recipe {id}"))
-    }
+
 }
 
 type CmdResult<T> = std::result::Result<T, String>;
@@ -64,28 +48,11 @@ fn err_chain(e: anyhow::Error) -> String {
 }
 
 #[derive(Serialize)]
-struct RecipeView {
-    #[serde(flatten)]
-    recipe: Recipe,
-    installed: bool,
-    installed_version: Option<String>,
-    installing: bool,
-    running: bool,
-    managed: bool,
-    fit: &'static str,
-    download_bytes: u64,
-    missing_tools: Vec<String>,
-    app_dir: String,
-}
-
-#[derive(Serialize)]
 struct Overview {
     hardware: hardware::Hardware,
     root: String,
     language: Option<String>,
     hf_token_set: bool,
-    recipes: Vec<RecipeView>,
-    problems: Vec<String>,
 }
 
 #[tauri::command]
@@ -93,159 +60,12 @@ async fn overview(state: State<'_, AppState>) -> CmdResult<Overview> {
     let settings = state.settings();
     let layout = state.layout();
     let hw = hardware::detect(&layout.root);
-    let (recipes, problems) = state.recipes();
-    let installing: HashSet<String> = state.installs.lock().unwrap().keys().cloned().collect();
-    let managed: HashSet<String> = state.engines.lock().unwrap().keys().cloned().collect();
-
-    let mut views = Vec::new();
-    for r in recipes {
-        let marker: Option<Value> =
-            std::fs::read(layout.marker(&r.id)).ok().and_then(|b| serde_json::from_slice(&b).ok());
-        let running = comfy::is_up(&state.http, r.run.port, &r.run.health).await;
-        views.push(RecipeView {
-            installed: marker.is_some(),
-            installed_version: marker.and_then(|m| m["version"].as_str().map(String::from)),
-            installing: installing.contains(&r.id),
-            running,
-            managed: managed.contains(&r.id),
-            fit: r.fit(&hw),
-            download_bytes: r.download_bytes(),
-            missing_tools: jobs::missing_tools(&r, &layout),
-            app_dir: layout.app(&r.id).to_string_lossy().to_string(),
-            recipe: r,
-        });
-    }
     Ok(Overview {
         hardware: hw,
         root: layout.root.to_string_lossy().to_string(),
         language: settings.language,
         hf_token_set: settings.hf_token.as_deref().is_some_and(|t| !t.is_empty()),
-        recipes: views,
-        problems,
     })
-}
-
-#[tauri::command]
-async fn install_recipe(app: AppHandle, state: State<'_, AppState>, id: String) -> CmdResult<()> {
-    let recipe = state.recipe(&id).map_err(err_chain)?;
-    let cancel = CancellationToken::new();
-    {
-        let mut installs = state.installs.lock().unwrap();
-        if installs.contains_key(&id) {
-            return Err("already installing".into());
-        }
-        installs.insert(id.clone(), cancel.clone());
-    }
-    let client = state.http.clone();
-    let layout = state.layout();
-    let token = state.settings().hf_token.filter(|t| !t.is_empty());
-    tauri::async_runtime::spawn(async move {
-        jobs::install(app.clone(), client, recipe, layout, token, cancel).await;
-        app.state::<AppState>().installs.lock().unwrap().remove(&id);
-        let _ = app.emit("octorole://changed", ());
-    });
-    Ok(())
-}
-
-#[tauri::command]
-fn cancel_install(state: State<'_, AppState>, id: String) {
-    if let Some(c) = state.installs.lock().unwrap().get(&id) {
-        c.cancel();
-    }
-}
-
-#[tauri::command]
-async fn uninstall_recipe(state: State<'_, AppState>, id: String) -> CmdResult<()> {
-    let recipe = state.recipe(&id).map_err(err_chain)?;
-    if state.installs.lock().unwrap().contains_key(&id) || state.engines.lock().unwrap().contains_key(&id) {
-        return Err("stop the engine or the install first".into());
-    }
-    let dir = state.layout().app(&recipe.id);
-    if dir.exists() {
-        tokio::fs::remove_dir_all(&dir).await.map_err(msg)?;
-    }
-    Ok(())
-}
-
-async fn start_engine(app: &AppHandle, state: &AppState, id: &str) -> Result<()> {
-    let recipe = state.recipe(id)?;
-    let layout = state.layout();
-    if !layout.marker(id).exists() {
-        bail!("not installed yet");
-    }
-    if state.engines.lock().unwrap().contains_key(id) {
-        return Ok(());
-    }
-    if comfy::is_up(&state.http, recipe.run.port, &recipe.run.health).await {
-        bail!("something is already listening on port {}", recipe.run.port);
-    }
-    let vars = recipe::vars(&recipe, &layout);
-    let script = recipe::expand(&recipe.run.script, &vars);
-    let args: Vec<String> = recipe.run.args.iter().map(|a| recipe::expand(a, &vars)).collect();
-    let app_dir = layout.app(id);
-
-    let mut cmd = tokio::process::Command::new("/bin/bash");
-    cmd.arg(&script)
-        .args(&args)
-        .current_dir(&app_dir)
-        .env("PATH", hardware::child_path(&layout.tools()))
-        .env("PORT", recipe.run.port.to_string())
-        .env("OCTOROLE_ROOT", &layout.root)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    #[cfg(unix)]
-    cmd.process_group(0);
-    let mut child = cmd.spawn().with_context(|| format!("start {script}"))?;
-    let pid = child.id().ok_or_else(|| anyhow!("engine exited immediately"))?;
-    state.engines.lock().unwrap().insert(id.to_string(), pid);
-
-    let log_file = app_dir.join("engine.log");
-    let _ = tokio::fs::write(&log_file, b"").await;
-    for stream in [
-        child.stdout.take().map(|s| Box::new(s) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
-        child.stderr.take().map(|s| Box::new(s) as Box<dyn tokio::io::AsyncRead + Send + Unpin>),
-    ]
-    .into_iter()
-    .flatten()
-    {
-        let app = app.clone();
-        let id = id.to_string();
-        let log_file = log_file.clone();
-        tauri::async_runtime::spawn(async move {
-            use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
-            let mut lines = tokio::io::BufReader::new(stream).lines();
-            let mut file = tokio::fs::OpenOptions::new().append(true).open(&log_file).await.ok();
-            while let Ok(Some(line)) = lines.next_line().await {
-                if let Some(f) = file.as_mut() {
-                    let _ = f.write_all(format!("{line}\n").as_bytes()).await;
-                }
-                jobs::emit_log(&app, &id, line);
-            }
-        });
-    }
-
-    let app = app.clone();
-    let id = id.to_string();
-    tauri::async_runtime::spawn(async move {
-        let status = child.wait().await;
-        app.state::<AppState>().engines.lock().unwrap().remove(&id);
-        jobs::emit_log(&app, &id, format!("engine stopped ({})", status.map(|s| s.to_string()).unwrap_or_default()));
-        let _ = app.emit("octorole://changed", ());
-    });
-    Ok(())
-}
-
-#[tauri::command]
-async fn start_recipe(app: AppHandle, state: State<'_, AppState>, id: String) -> CmdResult<()> {
-    start_engine(&app, &state, &id).await.map_err(err_chain)
-}
-
-#[tauri::command]
-async fn stop_recipe(state: State<'_, AppState>, id: String) -> CmdResult<()> {
-    let pid = state.engines.lock().unwrap().get(&id).copied();
-    jobs::kill_group(pid).await;
-    Ok(())
 }
 
 #[derive(Serialize)]
@@ -312,42 +132,6 @@ fn list_works(state: State<'_, AppState>) -> Vec<Work> {
     }
     works.sort_by(|a, b| b.created.cmp(&a.created).then(b.name.cmp(&a.name)));
     works
-}
-
-#[tauri::command]
-async fn generate(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    id: String,
-    values: HashMap<String, Value>,
-) -> CmdResult<Vec<Work>> {
-    let recipe = state.recipe(&id).map_err(err_chain)?;
-    if !state.generating.lock().unwrap().insert(id.clone()) {
-        return Err("already generating".into());
-    }
-    let works_dir = state.layout().works();
-    let sink_app = app.clone();
-    let sink_id = id.clone();
-    let emit = move |phase: &str, value: u64, max: u64, message: &str| {
-        let _ = sink_app.emit(
-            "octorole://studio",
-            comfy::StudioEvent {
-                recipe: sink_id.clone(),
-                phase: phase.to_string(),
-                value,
-                max,
-                message: message.to_string(),
-            },
-        );
-    };
-    let result = comfy::generate(&emit, &state.http, &recipe, values, &works_dir).await;
-    state.generating.lock().unwrap().remove(&id);
-    match &result {
-        Ok(files) => emit("done", files.len() as u64, files.len() as u64, ""),
-        Err(e) => emit("error", 0, 0, &format!("{e:#}")),
-    }
-    let files = result.map_err(err_chain)?;
-    Ok(files.iter().filter_map(|p| work_from(p)).collect())
 }
 
 /// Only paths inside the OctoRole root may be touched from the UI.
@@ -470,11 +254,6 @@ fn allow_works(app: &AppHandle, layout: &Layout) {
 
 #[tauri::command]
 fn save_settings(app: AppHandle, state: State<'_, AppState>, patch: SettingsPatch) -> CmdResult<()> {
-    if !state.installs.lock().unwrap().is_empty() || !state.engines.lock().unwrap().is_empty() {
-        if patch.root.is_some() {
-            return Err("stop running engines and installs before moving the folder".into());
-        }
-    }
     let mut s = state.settings.lock().unwrap();
     if let Some(root) = patch.root {
         let root = root.trim().to_string();
@@ -508,10 +287,6 @@ pub fn run() {
         .setup(|app| {
             let settings_file = app.path().app_config_dir()?.join("settings.json");
             let settings = Settings::load(&settings_file);
-            let mut bundled = app.path().resource_dir()?.join("recipes");
-            if cfg!(debug_assertions) && !bundled.is_dir() {
-                bundled = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("recipes");
-            }
             allow_works(app.handle(), &settings.layout());
             app.manage(AppState {
                 http: reqwest::Client::builder()
@@ -519,12 +294,8 @@ pub fn run() {
                     .connect_timeout(std::time::Duration::from_secs(20))
                     .build()?,
                 settings_file,
-                bundled_recipes: bundled,
                 settings: Mutex::new(settings),
-                installs: Mutex::new(HashMap::new()),
-                engines: Mutex::new(HashMap::new()),
                 h3_engine: tokio::sync::Mutex::new(None),
-                generating: Mutex::new(HashSet::new()),
             });
             Ok(())
         })
@@ -536,12 +307,6 @@ pub fn run() {
             hyperflow::h3_start,
             hyperflow::h3_render,
             overview,
-            install_recipe,
-            cancel_install,
-            uninstall_recipe,
-            start_recipe,
-            stop_recipe,
-            generate,
             list_works,
             delete_work,
             reveal,
@@ -567,14 +332,9 @@ pub fn run() {
     app.run(|handle, event| {
         if let RunEvent::Exit = event {
             let state = handle.state::<AppState>();
-            for c in state.installs.lock().unwrap().values() {
-                c.cancel();
-            }
-            for pid in state.engines.lock().unwrap().values() {
-                let _ = std::process::Command::new("/bin/kill")
-                    .args(["-TERM", "--", &format!("-{pid}")])
-                    .status();
-            }
+            if let Ok(mut engine) = state.h3_engine.try_lock() {
+                if let Some((mut child, _)) = engine.take() { let _ = child.start_kill(); }
+            };
         }
     });
 }

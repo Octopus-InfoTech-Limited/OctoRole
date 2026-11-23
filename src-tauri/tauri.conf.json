@@ -30,7 +30,7 @@
     "targets": ["app", "dmg"],
     "category": "public.app-category.graphics-design",
     "macOS": { "minimumSystemVersion": "26.2" },
-    "resources": ["recipes/**/*", "hyperflow/*.py", "hyperflow/*.png", "hyperflow/*.json", "qwen/*.py", "tts/dub.py", "tts/score.py"],
+    "resources": ["hyperflow/*.py", "hyperflow/*.png", "hyperflow/*.json", "qwen/*.py", "tts/dub.py", "tts/score.py"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

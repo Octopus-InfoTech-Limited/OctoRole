@@ -15,7 +15,7 @@ export function projectView(esc) {
   return `<h1>${esc(projectName())}</h1><div class="project-layout"><div>
   <section class="card"><label>${tr('Open project','開啟項目')}<select id="project-select">${['',...catalog.names].map(item).join('')}</select></label>
   <form id="new-project" class="row"><input name="name" required maxlength="60" aria-label="${tr('Project name','項目名稱')}" placeholder="${tr('New project name','新項目名稱')}"><button class="btn" type="submit">${tr('Create project','建立項目')}</button></form></section>
-  <section class="card"><div class="row">${action('previs',tr('Edit previs scenes','編輯預演場景'))}${action('studio',tr('Create with a recipe','用配方創作'))}${action('hyperflow',tr('H3 shots and dialogue','H3 鏡頭及角色配音'))}${action('works',tr('View works','查看作品'))}</div><p id="project-counts" class="muted small"></p></section>
+  <section class="card"><div class="row">${action('previs',tr('Edit previs scenes','編輯預演場景'))}${action('hyperflow',tr('H3 shots and dialogue','H3 鏡頭及角色配音'))}${action('works',tr('View works','查看作品'))}</div><p id="project-counts" class="muted small"></p></section>
   </div><section class="card" id="project-monitor"><h2>${tr('Project progress','項目進度')}</h2><div id="project-totals"></div><div id="project-episodes"></div><p id="project-progress" class="muted small"></p></section></div>`;
 }
 export async function refreshProject() {
