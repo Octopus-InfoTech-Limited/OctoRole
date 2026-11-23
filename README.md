@@ -5,6 +5,8 @@ Mac 上面嘅本機 AI 配方部署器（Tauri 2：Rust 後端 + 原生 JS 介�
 
 ## 下載及安裝 v0.6.1
 
+第一次用新版，可以一邊睇 [v0.6.1 項目圖解](docs/Project-Walkthrough.md)，一邊跟 [廣東話教學片（約 59 秒）](docs/tutorial/OctoRole-0.6.1-projects-yue.mp4) 操作。
+
 1. 用 Apple Silicon Mac [下載 OctoRole v0.6.1（Mac ZIP）](https://github.com/Octopus-InfoTech-Limited/OctoRole/releases/download/v0.6.1/OctoRole-0.6.1-Mac.zip)，解壓後將 **OctoRole.app** 拖入「應用程式」。
 2. 開啟 OctoRole。呢個版本採用本機 ad-hoc 簽署，未經 Apple 公證。如果 macOS 阻止開啟，確認下載來源係本公司 Release；如你信任呢個版本，可以喺「系統設定 → 私隱與保安」揀「仍要開啟」。
 3. 想先試排鏡，開「預演」，連接本機 Qwen 文字模型。想生成影片，開「HyperFlow H3 → 鏡頭」安裝引擎。H3 教學環境需要 macOS 26.2 或更新、完整版 Xcode 同 FFmpeg，並預留約 40 GB 畀模型同引擎。[H3 安裝步驟](docs/HyperFlow-Walkthrough.md)
