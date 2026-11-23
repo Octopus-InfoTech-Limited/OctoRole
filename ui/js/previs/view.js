@@ -734,6 +734,7 @@ function wire(root) {
     const status = form.querySelector('#pv-qwen-status');
     const started = P.scene;
     button.disabled = true;
+    P.qwenBusy = true;
     status.textContent = t('pv_qwen_busy');
     try {
       const raw = await invoke('previs_from_qwen', {description, seconds});
@@ -749,6 +750,7 @@ function wire(root) {
     } catch (error) {
       status.textContent = String(error?.message ?? error);
     } finally {
+      P.qwenBusy = false;
       button.disabled = false;
     }
   });
@@ -815,6 +817,7 @@ async function start() {
 }
 
 export const previs = {
+  busy: () => !!P.exporting || !!P.qwenBusy,
   /** Puts the persistent Previs view into the page (built on first use). */
   show(view, hooks, banner = '') {
     P.hooks = hooks;

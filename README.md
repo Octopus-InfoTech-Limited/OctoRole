@@ -3,6 +3,12 @@
 Mac 上面嘅本機 AI 配方部署器（Tauri 2：Rust 後端 + 原生 JS 介面）。
 揀一個配方，OctoRole 就會下載模型、逐個檔案核對 SHA-256、裝好本機引擎，然後用配方自動生成嘅表單去創作。全部喺你部 Mac 上面行。
 
+## 0.6.1 項目工作流程（原始碼版）
+
+開啟 OctoRole 後，喺「項目」建立或選擇一套劇，再開「預演」編輯場景、「HyperFlow H3」生成六鏡短劇或配音，最後去「作品」睇成片。既有作品可以喺「預設工作區」搵返。各項目共用已安裝嘅模型同引擎。
+
+內置一個創作配方時，可以喺「設定 → 管理配方」安裝或啟動引擎。加入第二個配方後，側欄會顯示「配方」。HyperFlow H3 有獨立入口。
+
 ## 下載及安裝 v0.6.0
 
 1. 用 Apple Silicon Mac [下載 OctoRole v0.6.0（Mac ZIP）](https://github.com/Octopus-InfoTech-Limited/OctoRole/releases/download/v0.6.0/OctoRole-0.6.0-Mac.zip)，解壓後將 **OctoRole.app** 拖入「應用程式」。

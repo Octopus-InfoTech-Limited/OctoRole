@@ -1,6 +1,6 @@
 [package]
 name = "octorole"
-version = "0.6.0"
+version = "0.6.1"
 description = "OctoRole - local AI recipe deployer for Apple Silicon"
 edition = "2021"
 rust-version = "1.77"

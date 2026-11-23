@@ -24,7 +24,7 @@ pub async fn dialogue_render(app: AppHandle, state: State<'_, AppState>, spec: V
     let py = dirs::home_dir().ok_or("Missing home directory")?
         .join("Library/Application Support/OctoRole-TTS/env/bin/python");
     if !py.is_file() { return Err("Please install voices first · 請先安裝本機聲線".into()); }
-    let mut task = Command::new(py).arg(resources(&app)?.join("dub.py")).arg(state.layout().root)
+    let mut task = Command::new(py).arg(resources(&app)?.join("dub.py")).arg(state.layout().project_root())
         .env("PATH","/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin").env("HF_HUB_OFFLINE","1")
         .env("PYTHONNOUSERSITE","1").stdin(Stdio::piped()).stdout(Stdio::piped())
         .stderr(Stdio::piped()).kill_on_drop(true).spawn().map_err(msg)?;

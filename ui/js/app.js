@@ -1,6 +1,8 @@
 import { invoke, listen, fileSrc, native } from './bridge.js';
 import { t, loc, setLang, getLang, languages } from './i18n.js';
-import { showH3 } from './hyperflow.js';
+import { projectView, refreshProject, projectName } from './projects.js';
+import { dialogueBusy } from './dialogue.js';
+import { showH3, h3Busy } from './hyperflow.js';
 import { previs } from './previs/view.js';
 
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -8,6 +10,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const gb = (bytes) => (bytes / 2 ** 30).toFixed(bytes >= 10 * 2 ** 30 ? 0 : 1) + ' GB';
 
 const icons = {
+  projects: '<path d="M3 6h7l2 3h9v11H3z"/>',
   recipes: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   studio: '<path d="M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z"/>',
   works: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/>',
@@ -17,7 +20,7 @@ const icons = {
 };
 
 const S = {
-  tab: 'recipes',
+  tab: native ? 'projects' : 'studio',
   ov: null,
   jobs: {},      // recipe id -> { phase, message, done, total, error }
   logs: {},      // recipe id -> string[]
@@ -60,10 +63,13 @@ function recipeById(id) {
 // ---------- shell ----------
 
 function renderNav() {
-  $('#nav').innerHTML = ['recipes', 'previs', 'studio', 'hyperflow', 'works', 'settings']
+  $('#nav').innerHTML = [...(native ? ['projects'] : []), ...(S.ov.recipes.length > 1 ? ['recipes'] : []), 'previs', 'studio', 'hyperflow', 'works', 'settings']
     .map((k) => `<button data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[k]}</svg>${t('nav_' + k)}</button>`)
     .join('');
+  const badge = document.querySelector('#active-project');
+  badge.hidden = !native;
+  badge.textContent = projectName();
   const hw = S.ov?.hardware;
   $('#hw').innerHTML = hw ? `<b>${esc(hw.chip || hw.arch)}</b>${hw.memory_gb} GB · ${t('free_space')} ${hw.disk_free_gb} GB` : '';
 }
@@ -74,6 +80,11 @@ function render() {
   const view = $('#view');
   const keep = view.scrollTop;
   const banner = native ? '' : `<div class="notice">${t('preview_banner')}</div>`;
+  if (S.tab === 'projects') {
+    view.innerHTML=projectView(esc);
+    refreshProject().catch(e=>toast(String(e),true));
+    return;
+  }
   if (S.tab === 'hyperflow') return showH3(view, {esc, toast, loadWorks});
   if (S.tab === 'previs') return previs.show(view, { toast }, banner);
   view.innerHTML = banner + { recipes: viewRecipes, studio: viewStudio, works: viewWorks, settings: viewSettings }[S.tab]();
@@ -207,7 +218,7 @@ function studioDefaults(r) {
 function viewStudio() {
   const list = studioRecipes();
   const head = `<h1>${t('studio_title')}</h1><p class="sub">${t('studio_sub')}</p>`;
-  if (!list.length) return head + `<div class="card empty">${t('studio_none')}</div>`;
+  if (!list.length) return head + `<div class="card empty">${t('studio_none')} <button class="btn" data-tab="recipes">${t('manage_recipes')}</button></div>`;
   const st = S.studio;
   let r = list.find((x) => x.id === st.recipe);
   if (!r) {
@@ -370,12 +381,13 @@ function viewSettings() {
       <button class="btn" data-set="save-hf">${t('save')}</button>${S.ov.hf_token_set ? `<button class="btn link" data-set="clear-hf">${t('remove')}</button>` : ''}</div></section>
   <section class="card"><h2>${t('language')}</h2>
     <select id="lang" style="max-width:220px" aria-label="${t('language')}">${languages.map(([k, n]) => `<option value="${k}" ${k === getLang() ? 'selected' : ''}>${n}</option>`).join('')}</select></section>
-  <section class="card"><h2>${t('own_recipes')}</h2><p class="muted small">${t('own_recipes_hint', { dir: `<code>${esc(S.ov.root)}/recipes</code>` })}</p></section>
+  <section class="card"><h2>${t('own_recipes')}</h2><button class="btn" data-tab="recipes">${t('manage_recipes')}</button><p class="muted small">${t('own_recipes_hint', { dir: `<code>${esc(S.ov.root)}/recipes</code>` })}</p></section>
   <p class="muted small">OctoRole ${esc(S.version ?? '')}</p>`;
 }
 
 async function saveSettings(patch) {
   await call('save_settings', { patch });
+  if (Object.hasOwn(patch,'root')) return location.reload();
   toast(t('saved'));
   await refresh();
   loadWorks();
@@ -387,7 +399,7 @@ document.addEventListener('click', async (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) {
     readForm();
-    if (S.tab === 'previs') previs.hide();
+    if (S.tab === 'previs') await previs.hide();
     S.tab = tab.dataset.tab;
     render();
     if (S.tab === 'works') loadWorks();
@@ -437,6 +449,25 @@ document.addEventListener('click', async (e) => {
     if (v) saveSettings({ hf_token: v });
   } else if (set === 'clear-hf') saveSettings({ hf_token: '' });
 });
+
+async function changeProject(name, create) {
+  if (S.studio.busy || h3Busy() || dialogueBusy() || previs.busy()) {
+    toast(t('project_busy'),true);
+    return render();
+  }
+  await call('project_open',{name,create});
+  location.reload();
+}
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'new-project') return;
+  e.preventDefault();
+  const name = e.target.elements.name.value.trim();
+  if (name) changeProject(name,true).catch(()=>{});
+});
+document.addEventListener('change', e=>{
+  if (e.target.id==='project-select') changeProject(e.target.value,false).catch(()=>render());
+});
+setInterval(()=>{if(S.tab==='projects')refreshProject().catch(()=>{});},5000);
 
 document.addEventListener('submit', (e) => {
   if (e.target.id === 'studio-form') {

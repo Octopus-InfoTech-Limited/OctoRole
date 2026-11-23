@@ -43,7 +43,7 @@ pub async fn h3_render(
     state: State<'_, AppState>,
     project: Value,
 ) -> CmdResult<String> {
-    let root = state.layout().root;
+    let root = state.layout().project_root();
     let mut child = Command::new("/usr/bin/python3")
         .arg("-u")
         .arg(assets(&app)?.join("render.py"))

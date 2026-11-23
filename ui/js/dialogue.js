@@ -1,10 +1,11 @@
+import {draftKey} from './projects.js';
 import { invoke, fileSrc } from './bridge.js';
 import { getLang } from './i18n.js';
 
 const tr = (en, zh) => getLang() === 'en' ? en : zh;
 const labels = {driver:'阿啟', coach:'阿森', rival:'白頭盔', rookie:'小車手'};
 const samples = {yue:['見唔見到前車條鏈？','見到。我等緊佢讓嗰半個位。'], cmn:['看得見前車的鏈條嗎？','看得見。我在等他讓出半個車位。']};
-const storage = 'octorole-dialogue-v1';
+const storage = draftKey('octorole-dialogue-v1');
 let drafts = {}, lang = 'yue', busy = false, message = '', outputs = {};
 try {
   const saved = JSON.parse(localStorage.getItem(storage));
@@ -74,3 +75,5 @@ export function showDialogue(panel, {esc, toast}, latest) {
     }catch(e){toast(String(e),true);}
   };
 }
+
+export const dialogueBusy = () => busy;

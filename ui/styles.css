@@ -147,3 +147,7 @@ textarea { min-height: 96px; resize: vertical; }
 .dub-lines .row label { flex: 1; min-width: 8rem; }
 .dub-lines input, .dub-lines select, .dub-lines textarea { width: 100%; }
 #h3-panel fieldset { min-width: 0; }
+
+.active-project { margin: 2px 14px 12px; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+#new-project { margin-top: 14px; }
+#project-progress { white-space: pre-wrap; overflow-wrap: anywhere; }

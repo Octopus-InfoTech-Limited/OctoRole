@@ -1,6 +1,6 @@
 const dict = {
   'zh-Hant': {
-    nav_recipes: '配方', nav_studio: '創作', nav_works: '作品', nav_settings: '設定',
+    nav_projects: '項目', project_busy: '請等目前操作完成再切換項目。', nav_recipes: '配方', manage_recipes: '管理配方', nav_studio: '創作', nav_works: '作品', nav_settings: '設定',
     recipes_title: '配方', recipes_sub: '每個配方會下載模型、核對檔案，再裝好本機引擎。全部喺你部 Mac 上面行。',
     fit_good: '你部機行得順', fit_tight: '行到，但記憶體較緊', fit_no: '你部機唔適合',
     installed: '已安裝', not_installed: '未安裝', running: '運行中', update_available: '配方有更新',
@@ -12,8 +12,8 @@ const dict = {
     job_done: '安裝完成', job_cancelled: '已取消，下次會由中斷位置繼續', job_error: '安裝失敗',
     missing_tools: '缺少工具：{tools}。請先喺「終端機」執行 xcode-select --install。',
     external_running: '呢個埠已經有程式運行緊（唔係由 OctoRole 啟動）。',
-    studio_title: '創作', studio_sub: '表單由配方自動生成，填好就交俾本機引擎。',
-    studio_none: '未有可以用嘅配方。請先去「配方」安裝一個。',
+    studio_title: '創作', studio_sub: '揀配方，填提示詞同參考素材。生成後喺目前項目嘅「作品」睇結果。',
+    studio_none: '安裝一個創作配方，就可以喺呢度使用。',
     recipe: '配方', generate: '生成', generating: '生成中…', engine_off: '引擎未啟動。', engine_start_first: '先啟動引擎',
     st_queued: '排隊中…', st_running: '準備模型中…', st_progress: '生成中 {v}/{m}', st_saving: '儲存中…',
     stage_empty: '成品會喺呢度顯示。', choose_image: '揀圖片', no_image: '未揀圖片', clear: '清除',
@@ -52,7 +52,7 @@ const dict = {
     preview_banner: '預覽模式：呢度係模擬資料，實際安裝同生成要喺 Mac App 入面做。',
   },
   en: {
-    nav_recipes: 'Recipes', nav_studio: 'Studio', nav_works: 'Works', nav_settings: 'Settings',
+    nav_projects: 'Projects', project_busy: 'Wait for the active operation before switching projects.', nav_recipes: 'Recipes', manage_recipes: 'Manage recipes', nav_studio: 'Studio', nav_works: 'Works', nav_settings: 'Settings',
     recipes_title: 'Recipes', recipes_sub: 'Each recipe downloads models, verifies every file, then sets up a local engine. Everything runs on your Mac.',
     fit_good: 'Runs well on this Mac', fit_tight: 'Works, memory is tight', fit_no: 'Not suitable for this Mac',
     installed: 'Installed', not_installed: 'Not installed', running: 'Running', update_available: 'Recipe updated',
@@ -64,8 +64,8 @@ const dict = {
     job_done: 'Install finished', job_cancelled: 'Cancelled. It will resume where it stopped.', job_error: 'Install failed',
     missing_tools: 'Missing tools: {tools}. Run xcode-select --install in Terminal first.',
     external_running: 'Something else is already running on this port (not started by OctoRole).',
-    studio_title: 'Studio', studio_sub: 'The form is built from the recipe and sent to the local engine.',
-    studio_none: 'No recipe is ready yet. Install one under Recipes first.',
+    studio_title: 'Studio', studio_sub: 'Choose a recipe and enter its inputs. Generated media appears in this project’s Works.',
+    studio_none: 'Install a recipe to start creating.',
     recipe: 'Recipe', generate: 'Generate', generating: 'Generating…', engine_off: 'The engine is not running.', engine_start_first: 'Start engine',
     st_queued: 'Queued…', st_running: 'Loading model…', st_progress: 'Generating {v}/{m}', st_saving: 'Saving…',
     stage_empty: 'Results appear here.', choose_image: 'Choose image', no_image: 'No image chosen', clear: 'Clear',

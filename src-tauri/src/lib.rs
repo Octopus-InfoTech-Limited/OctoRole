@@ -6,6 +6,7 @@ mod hyperflow;
 mod jobs;
 mod previs;
 mod qwen;
+mod projects;
 mod recipe;
 mod settings;
 
@@ -41,7 +42,7 @@ impl AppState {
         self.settings.lock().unwrap().clone()
     }
     fn layout(&self) -> Layout {
-        Layout::new(self.settings().root_dir())
+        self.settings().layout()
     }
     fn recipes(&self) -> (Vec<Recipe>, Vec<String>) {
         recipe::load_all(&self.bundled_recipes, &self.layout())
@@ -479,6 +480,7 @@ fn save_settings(app: AppHandle, state: State<'_, AppState>, patch: SettingsPatc
         if !root.is_empty() && !Path::new(&root).is_absolute() {
             return Err("the folder must be an absolute path".into());
         }
+        s.project = None;
         s.root = (!root.is_empty()).then_some(root);
     }
     if let Some(tok) = patch.hf_token {
@@ -489,7 +491,7 @@ fn save_settings(app: AppHandle, state: State<'_, AppState>, patch: SettingsPatc
         s.language = Some(lang);
     }
     s.save(&state.settings_file).map_err(err_chain)?;
-    allow_works(&app, &Layout::new(s.root_dir()));
+    allow_works(&app, &s.layout());
     Ok(())
 }
 
@@ -509,7 +511,7 @@ pub fn run() {
             if cfg!(debug_assertions) && !bundled.is_dir() {
                 bundled = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("recipes");
             }
-            allow_works(app.handle(), &Layout::new(settings.root_dir()));
+            allow_works(app.handle(), &settings.layout());
             app.manage(AppState {
                 http: reqwest::Client::builder()
                     .user_agent(concat!("OctoRole/", env!("CARGO_PKG_VERSION")))
@@ -553,6 +555,9 @@ pub fn run() {
             previs_export,
             save_settings,
             app_info,
+            projects::project_list,
+            projects::project_open,
+            projects::project_status,
         ])
         .build(tauri::generate_context!())
         .expect("error while building OctoRole");

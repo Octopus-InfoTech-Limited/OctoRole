@@ -7,6 +7,8 @@ pub struct Settings {
     /// Where apps, models and works live. Defaults to ~/OctoRole.
     #[serde(default)]
     pub root: Option<String>,
+    #[serde(default)]
+    pub project: Option<String>,
     /// Hugging Face token, only ever sent to huggingface.co.
     #[serde(default)]
     pub hf_token: Option<String>,
@@ -35,6 +37,12 @@ impl Settings {
         Ok(())
     }
 
+    pub fn layout(&self) -> Layout {
+        let mut layout = Layout::new(self.root_dir());
+        layout.project = self.project.as_deref().and_then(|n| crate::previs::check_name(n).ok()).map(String::from);
+        layout
+    }
+
     pub fn root_dir(&self) -> PathBuf {
         match self.root.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
             Some(r) => PathBuf::from(r),
@@ -46,11 +54,12 @@ impl Settings {
 /// Folder layout under the root.
 pub struct Layout {
     pub root: PathBuf,
+    project: Option<String>,
 }
 
 impl Layout {
     pub fn new(root: PathBuf) -> Self {
-        Self { root }
+        Self { root, project: None }
     }
     pub fn apps(&self) -> PathBuf {
         self.root.join("apps")
@@ -61,14 +70,20 @@ impl Layout {
     pub fn models(&self) -> PathBuf {
         self.root.join("models")
     }
+    pub fn project_root(&self) -> PathBuf {
+        match &self.project {
+            Some(name) => self.root.join("projects").join(name),
+            None => self.root.clone(),
+        }
+    }
     pub fn works(&self) -> PathBuf {
-        self.root.join("works")
+        self.project_root().join("works")
     }
     pub fn tools(&self) -> PathBuf {
         self.root.join("tools")
     }
     pub fn previs(&self) -> PathBuf {
-        self.root.join("previs")
+        self.project_root().join("previs")
     }
     pub fn user_recipes(&self) -> PathBuf {
         self.root.join("recipes")

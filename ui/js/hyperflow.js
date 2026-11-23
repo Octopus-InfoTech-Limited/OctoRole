@@ -1,9 +1,10 @@
+import {draftKey} from './projects.js';
 import { invoke, listen, native } from './bridge.js';
 import { showDialogue } from './dialogue.js';
 import { getLang } from './i18n.js';
 
 let mode = 'shots';
-const storageKey = 'hyperflow-film-v1';
+const storageKey = draftKey('hyperflow-film-v1');
 let project, busy = false, status = '', result = '', listening;
 const tr = (en, zh) => getLang() === 'en' ? en : zh;
 function save() { localStorage.setItem(storageKey, JSON.stringify(project)); }
@@ -76,3 +77,5 @@ export async function showH3(view, {esc, toast, loadWorks}) {
     };
   } catch (error) { panel.textContent = String(error); }
 }
+
+export const h3Busy = () => busy;
