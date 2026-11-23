@@ -1,11 +1,8 @@
 """Translate local Qwen output to the editable OctoRole scene format."""
 import json
 import math
-from pathlib import Path
 import re
-import subprocess
 import sys
-import time
 import urllib.error
 import urllib.request as request
 
@@ -43,40 +40,22 @@ def select_model(models):
     return next((m for m in ids if "qwen3.6-35b-a3b" in m.lower()), ids[0])
 
 
-def backend():
-    url = "http://127.0.0.1:19435/v1"
-    try:
-        return url, None, select_model(api(url + "/models", timeout=2))
-    except (OSError, ValueError, KeyError):
-        pass
-    settings = Path.home() / ".omlx/settings.json"
-    if settings.is_file():
-        conf = json.loads(settings.read_text())
-        port = int(conf.get("server", {}).get("port", 8000))
-        if not 1 <= port <= 65535:
-            raise ValueError("oMLX 埠號無效。")
-        url = f"http://127.0.0.1:{port}/v1"
-        key = conf.get("auth", {}).get("api_key")
+def backend(port, key):
+    ports = [port] if port else [19435, 8000]
+    for local_port in ports:
+        if type(local_port) is not int or not 1 <= local_port <= 65535:
+            raise ValueError("本機服務埠號無效。")
+        url = f"http://127.0.0.1:{local_port}/v1"
         try:
-            models = api(url + "/models", key)
-        except urllib.error.HTTPError:
-            raise ValueError("請檢查 oMLX 本機服務嘅 API 授權。") from None
+            models = api(url + "/models", key, timeout=3)
+        except urllib.error.HTTPError as exc:
+            if exc.code in (401, 403):
+                raise ValueError("請喺本機服務設定輸入正確嘅 API 金鑰。") from None
+            raise
         except OSError:
-            if Path("/Applications/oMLX.app").is_dir():
-                subprocess.run(["/usr/bin/open", "-gj", "/Applications/oMLX.app"], check=True)
-                for _ in range(20):
-                    time.sleep(1)
-                    try:
-                        models = api(url + "/models", key, timeout=2)
-                        break
-                    except OSError:
-                        continue
-                else:
-                    raise ValueError("請啟動 oMLX，再試一次。")
-            else:
-                raise ValueError("請啟動 oMLX，再試一次。")
+            continue
         return url, key, select_model(models)
-    raise ValueError("請啟動呢部 Mac 嘅本機 Qwen 服務（MLX 埠 19435 或 oMLX），再撳生成。")
+    raise ValueError("請啟動本機 Qwen，並核對埠號。")
 
 
 def scene_from(raw, seconds):
@@ -118,7 +97,7 @@ def main():
     seconds, description = p["seconds"], p["description"].strip()
     if not isinstance(seconds, int) or not 1 <= seconds <= 60 or not 1 <= len(description) <= 2000:
         raise ValueError("請輸入 1–2000 字描述，同埋 1–60 秒長度。")
-    url, key, model = backend()
+    url, key, model = backend(p.get("port"), p.get("key"))
     messages = [{"role":"system","content":PROMPT},{"role":"user","content":f"Duration {seconds}s. {description}"}]
     for attempt in range(2):
         body = {"model":model,"messages":messages,"max_tokens":2400,"temperature":0.3,

@@ -17,7 +17,7 @@ from opencc import OpenCC
 
 SR = 24000
 VOICES = {"driver": ("aiden", .84), "coach": ("uncle_fu", .75), "rival": ("ryan", .91), "rookie": ("serena", 1.04)}
-ROOT = Path.home() / "Library/Application Support/OctoRole-TTS/models"
+ROOT = Path(os.environ["OCTOROLE_VOICES"])
 
 
 def tc(sample):

@@ -173,6 +173,9 @@ function build() {
     ${native ? `<form class="card pv-pane" id="pv-qwen">
       <label for="pv-idea"><b>${t('pv_qwen')}</b></label>
       <textarea id="pv-idea" rows="2" maxlength="2000" required placeholder="${t('pv_qwen_hint')}"></textarea>
+      <details><summary>${t('pv_qwen_connection')}</summary>
+      <label>${t('pv_qwen_port')} <input type="number" id="pv-port" min="1" max="65535" placeholder="19435 / 8000"></label>
+      <label>${t('pv_qwen_key')} <input type="password" id="pv-key" autocomplete="off"></label></details>
       <div class="row"><label>${t('pv_qwen_seconds')} <input id="pv-seconds" type="number" min="1" max="60" step="1" value="8" required style="width:5em"></label>
       <button type="submit" class="btn primary">${t('pv_qwen_generate')}</button>
       <span id="pv-qwen-status" role="status" class="small muted"></span></div>
@@ -737,7 +740,7 @@ function wire(root) {
     P.qwenBusy = true;
     status.textContent = t('pv_qwen_busy');
     try {
-      const raw = await invoke('previs_from_qwen', {description, seconds});
+      const raw = await invoke('previs_from_qwen', {description, seconds, port: form.querySelector('#pv-port').valueAsNumber || null, key: form.querySelector('#pv-key').value || null});
       await refreshList();
       if (P.scene === started && P.root === root && !P.exporting) {
         // Let any pending autosave finish before switching scenes.

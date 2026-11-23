@@ -1,0 +1,80 @@
+[
+  {
+    "to": "LICENSE",
+    "sha256": "59b99642b95ea21630e311198ddbfffbfe05aadba0c2f5d884cbdf4efcc90f44",
+    "bytes": 17604,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/LICENSE"
+  },
+  {
+    "to": "MODIFICATIONS.md",
+    "sha256": "4d1f5f8b3f8023e926b4abb12f08c8c00936101b9dcaf97bf316d84be4fc076b",
+    "bytes": 2000,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/MODIFICATIONS.md"
+  },
+  {
+    "to": "NOTICE",
+    "sha256": "154fe7fbdf198395d53c57d6786b2fbf7e63a083ff70843c5ef78c0c7303d91a",
+    "bytes": 121,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/NOTICE"
+  },
+  {
+    "to": "README.md",
+    "sha256": "df32d5fb7264c73e5c4639023320ec8c818e752712f4ae0bb57b7e54411125f9",
+    "bytes": 6486,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/README.md"
+  },
+  {
+    "to": "config.json",
+    "sha256": "72c37148ccb845a8c8c620350b9532c6f790153d890c05213f679c9bc8d44034",
+    "bytes": 5028,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/config.json"
+  },
+  {
+    "to": "merges.txt",
+    "sha256": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    "bytes": 1671839,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/merges.txt"
+  },
+  {
+    "to": "tokenizer.json",
+    "sha256": "a5d85b6dcc535e6b93115a9ef287e6132fdbf30270da6218194ba742261173c7",
+    "bytes": 7032403,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/tokenizer.json"
+  },
+  {
+    "to": "tokenizer_config.json",
+    "sha256": "a07e942ac874baa13758de8d1fbdb186683cc03416b5589e1b6671c6b3057c68",
+    "bytes": 11003,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/tokenizer_config.json"
+  },
+  {
+    "to": "vocab.json",
+    "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    "bytes": 2776833,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/vocab.json"
+  },
+  {
+    "to": "audio_vae.safetensors",
+    "sha256": "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48",
+    "bytes": 605254808,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/audio_vae.safetensors"
+  },
+  {
+    "to": "video_vae.safetensors",
+    "sha256": "7c1f131492e7eddacaac9069a61b81bdd39de5cc96561e677c5eab1cdce5e522",
+    "bytes": 5207808496,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/video_vae.safetensors"
+  },
+  {
+    "to": "transformer.safetensors",
+    "sha256": "f31da93ac25fadfbc99b0d0e1535ac00e960a9ead0b89c1aaaa71d71df16f2b5",
+    "bytes": 14971410087,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/transformer.safetensors"
+  },
+  {
+    "to": "text_encoder.safetensors",
+    "sha256": "0323dda5f35a607de923daa779fc53b813b7c882fd82d8525b7415f72853a5c5",
+    "bytes": 16460999117,
+    "url": "https://huggingface.co/hancheng-ai/HyperFlow-H3-Flash-REF2VA-MLX-Serve-8bit/resolve/f3083be2f6af4aec06416967381296f7336afe7d/text_encoder.safetensors"
+  }
+]

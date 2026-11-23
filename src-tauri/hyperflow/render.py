@@ -91,7 +91,7 @@ def render_shot(port, spec, character, scene, blocking, dest, temp):
         pcm.write_bytes(base64.b64decode(event["audio_data"], validate=True))
         inputs += ["-f","s16le","-ar",str(event.get("sample_rate",32000)),"-ac","2","-i",pcm]
     clip = temp / "clip.mp4"
-    ffmpeg(*inputs, "-frames:v", str(FRAMES), "-c:v","libx264","-crf","16","-pix_fmt","yuv420p","-c:a","aac",clip)
+    ffmpeg(*inputs, "-frames:v", str(FRAMES), "-c:v","h264_videotoolbox","-q:v","75","-pix_fmt","yuv420p","-c:a","aac",clip)
     audio = any(s["codec_type"] == "audio" for s in streams(clip))
     inputs = ["-i", clip] if audio else ["-i", clip, "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
     out = temp / "normalized.mp4"
@@ -185,7 +185,7 @@ def run(root, project, port):
             subs = ["-map", "6:s:0", "-c:s", "mov_text", "-metadata:s:s:0", "language=yue",
                     "-disposition:s:0", "default"]
         ffmpeg(*args, "-filter_complex", ";".join(parts), "-map", picture, "-map", "[a]", *subs,
-               "-c:v", "libx264", "-crf", "17", "-pix_fmt", "yuv420p", "-c:a", "aac",
+               "-c:v", "h264_videotoolbox", "-q:v", "75", "-pix_fmt", "yuv420p", "-c:a", "aac",
                "-movflags", "+faststart", out)
         validate(out, FRAMES * 6, output_height)
         side = temp / "meta.json"
@@ -203,7 +203,6 @@ if __name__ == "__main__":
     parser.add_argument("--project", default=str(HERE / "story.json"), help="Story JSON file, or - for stdin")
     parser.add_argument("--port", type=int, default=18731)
     args = parser.parse_args()
-    os.environ["PATH"] = "/opt/homebrew/bin:/usr/local/bin:" + os.environ.get("PATH", "")
     try:
         args.root.mkdir(parents=True, exist_ok=True)
         with (args.root / ".hyperflow.lock").open("a") as lock:

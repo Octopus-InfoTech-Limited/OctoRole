@@ -14,18 +14,22 @@ fn resources(app: &AppHandle) -> CmdResult<PathBuf> {
 
 #[tauri::command]
 pub async fn dialogue_setup(app: AppHandle) -> CmdResult<()> {
-    let result = Command::new("/usr/bin/open").args(["-a", "Terminal"])
-        .arg(resources(&app)?.join("Install voices.command")).status().await.map_err(msg)?;
-    if result.success() { Ok(()) } else { Err("Could not open installer".into()) }
+    let voices = app.path().resource_dir().map_err(msg)?.join("voices");
+    for lang in ["cmn", "yue"] {
+        if !voices.join(lang).join("model.safetensors").is_file() {
+            return Err(format!("Missing bundled {lang} voice model"));
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn dialogue_render(app: AppHandle, state: State<'_, AppState>, spec: Value) -> CmdResult<Value> {
-    let py = dirs::home_dir().ok_or("Missing home directory")?
-        .join("Library/Application Support/OctoRole-TTS/env/bin/python");
-    if !py.is_file() { return Err("Please install voices first · 請先安裝本機聲線".into()); }
+    let res = app.path().resource_dir().map_err(msg)?;
+    let py = res.join("python/bin/python3.11");
     let mut task = Command::new(py).arg(resources(&app)?.join("dub.py")).arg(state.layout().project_root())
-        .env("PATH","/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin").env("HF_HUB_OFFLINE","1")
+        .env("PATH",res.join("../MacOS")).env("OCTOROLE_VOICES",res.join("voices"))
+        .env("HF_HUB_OFFLINE","1").env("PYTHONDONTWRITEBYTECODE","1")
         .env("PYTHONNOUSERSITE","1").stdin(Stdio::piped()).stdout(Stdio::piped())
         .stderr(Stdio::piped()).kill_on_drop(true).spawn().map_err(msg)?;
     let mut stdin = task.stdin.take().ok_or("Missing dialogue input")?;

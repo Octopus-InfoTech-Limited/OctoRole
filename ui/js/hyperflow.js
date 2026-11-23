@@ -15,7 +15,7 @@ function progress() {
 
 export async function showH3(view, {esc, toast, loadWorks}) {
   const title = tr('Six-shot film', '六鏡短劇');
-  view.innerHTML = `<h1>HyperFlow H3</h1><div class="row dub-tabs"><button class="btn ${mode==='shots'?'primary':''}" data-mode="shots">${tr('Shots','鏡頭')}</button><button class="btn ${mode==='dub'?'primary':''}" data-mode="dub">${tr('Character dialogue','角色配音')}</button></div><section class="card" id="h3-panel"></section>`;
+  view.innerHTML = `<h1>HyperFlow H3</h1><p>Powered by MiniMax H3</p><div class="row dub-tabs"><button class="btn ${mode==='shots'?'primary':''}" data-mode="shots">${tr('Shots','鏡頭')}</button><button class="btn ${mode==='dub'?'primary':''}" data-mode="dub">${tr('Character dialogue','角色配音')}</button></div><section class="card" id="h3-panel"></section>`;
   view.querySelectorAll('[data-mode]').forEach(b => { b.onclick=()=>{mode=b.dataset.mode;showH3(view,{esc,toast,loadWorks});}; });
   const panel = view.querySelector('#h3-panel');
   if (!native) { panel.textContent = tr('Open the Mac app to render.', '請喺 Mac App 開啟呢頁生成影片。'); return; }
@@ -36,7 +36,7 @@ export async function showH3(view, {esc, toast, loadWorks}) {
     const pick = (key, label, value) => `<div class="row"><button class="btn" data-pick="${key}">${label}</button><small>${esc(value)}</small>${value ? `<button class="btn link" data-clear="${key}">×</button>` : ''}</div>`;
     panel.innerHTML = `<h2>${title} · 16:9</h2>
     <p>${tr('Six 3-second shots · one shared character reference.', '六個約三秒鏡頭 · 全片共用角色參考相。')}</p>
-    <button class="btn" data-setup>${tr('Set up engine','安裝引擎')}</button> <button class="btn" data-start>${tr('Start local engine','啟動本機引擎')}</button>
+    <button class="btn" data-setup>${tr('Download model','下載模型')}</button> <button class="btn" data-start>${tr('Start local engine','啟動本機引擎')}</button>
     <fieldset ${busy ? 'disabled' : ''}>
     <label>${tr('Output resolution','輸出解像度')}<select data-resolution>
       ${[['288p','512 × 288'],['576p','1024 × 576'],['720p','1280 × 720'],['1080p','1920 × 1080']].map(([id,label])=>`<option value="${id}" ${(project.resolution || '576p')===id?'selected':''}>${label}</option>`).join('')}

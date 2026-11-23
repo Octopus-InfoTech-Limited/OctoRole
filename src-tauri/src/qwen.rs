@@ -10,6 +10,8 @@ pub async fn previs_from_qwen(
     state: State<'_, AppState>,
     description: String,
     seconds: u8,
+    port: Option<u16>,
+    key: Option<String>,
 ) -> CmdResult<Value> {
     let description = description.trim();
     if description.is_empty() || description.chars().count() > 2000 || !(1..=60).contains(&seconds)
@@ -25,7 +27,7 @@ pub async fn previs_from_qwen(
     if cfg!(debug_assertions) && !helper.is_file() {
         helper = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("qwen/director.py");
     }
-    let mut task = Command::new("/usr/bin/python3")
+    let mut task = Command::new(app.path().resource_dir().map_err(msg)?.join("python/bin/python3.11"))
         .arg("-I")
         .arg(helper)
         .stdin(Stdio::piped())
@@ -37,7 +39,7 @@ pub async fn previs_from_qwen(
     let mut input = task.stdin.take().ok_or("Missing Qwen input")?;
     input
         .write_all(
-            json!({"description":description,"seconds":seconds})
+            json!({"description":description,"seconds":seconds,"port":port,"key":key})
                 .to_string()
                 .as_bytes(),
         )

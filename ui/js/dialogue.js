@@ -26,7 +26,7 @@ export function showDialogue(panel, {esc, toast}, latest) {
   panel.innerHTML = `<h2>${tr('Character dialogue','角色配音')} · Qwen3-TTS</h2>
     <p>${tr('Write what each character says. The same lines become the subtitles.','輸入角色實際講嘅說話，同一份對白會用嚟配音同出字幕。')}</p>
     <fieldset ${busy?'disabled':''}><div class="row"><label>${tr('Language','語言')} <select data-language>${opt('yue','廣東話',lang)}${opt('cmn','普通話',lang)}</select></label>
-    <button class="btn" data-action="setup">${tr('Install local voices','安裝本機聲線')}</button></div>
+    <button class="btn" data-action="setup">${tr('Check bundled voices','檢查內置聲線')}</button></div>
     ${picker('video',tr('Choose source video (optional)','揀原片（可選）'))}
     ${latest?`<button class="btn" data-action="latest">${tr('Use last H3 film','用最近生成嘅 H3 成片')}</button>`:''}
     <div class="dub-lines">${d.lines.map((line,i)=>`<section data-row="${i}">
@@ -61,7 +61,7 @@ export function showDialogue(panel, {esc, toast}, latest) {
       if(t.dataset.clear){d[t.dataset.clear]='';save();re();return;}
       if(t.dataset.remove!==undefined){d.lines.splice(Number(t.dataset.remove),1);save();re();return;}
       switch(t.dataset.action){
-        case 'setup': await invoke('dialogue_setup');break;
+        case 'setup': await invoke('dialogue_setup');toast(tr('Both voices are ready.','廣東話同普通話聲線都已就緒。'));break;
         case 'latest': d.video=latest;save();re();break;
         case 'add': d.lines.push({voice:'driver',name:labels.driver,text:'',start:''});save();re();break;
         case 'reveal': await invoke('reveal',{path:result.video||result.audio});break;

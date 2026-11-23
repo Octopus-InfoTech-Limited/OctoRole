@@ -34,6 +34,7 @@ struct AppState {
     installs: Mutex<HashMap<String, CancellationToken>>,
     /// Engines we started: recipe id -> process group id.
     engines: Mutex<HashMap<String, u32>>,
+    h3_engine: tokio::sync::Mutex<Option<(tokio::process::Child, u16)>>,
     generating: Mutex<HashSet<String>>,
 }
 
@@ -522,6 +523,7 @@ pub fn run() {
                 settings: Mutex::new(settings),
                 installs: Mutex::new(HashMap::new()),
                 engines: Mutex::new(HashMap::new()),
+                h3_engine: tokio::sync::Mutex::new(None),
                 generating: Mutex::new(HashSet::new()),
             });
             Ok(())
